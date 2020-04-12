@@ -10,21 +10,30 @@ Usage instructions:
 	- when prompted, imput an integer:
 		$ Please enter an integer: <insert integer here>
 
-Uses doctest test suite -- Testing functionality of:
-	- get_prime_factors - are the returned factors prime
-	- is_prime - is the integer actually prime
-	- previously_found_factors - FIXME
-	- persist_factors - FIXME
+Uses unittest test suite -- Testing functionality of:
+	- get_prime_factors - are the returned factors prime?
+	- is_prime - is the integer actually prime?
+	- previously_found_factors - if factors have been persisted, do they get returned?
+	- persist_factors - are factors being persisted?
 
 
 FIXME - Continuous integeration on new commits -- e.g.,
-	python -m doctest -v prime_factor.py
+	$ python -m unittest tests/test_prime_factor.py -v
 
 Refactoring philosophy for the first pass --
-	write the simplest version
+	write a naive version
+	the functionality is decoupled - to find the prime factors, we find the factors, 
+		and if it is prime, then we add it to the prime factors list
 	Note: this version implements a naive prime factorization algorithm, and
 	 	is really inefficient - e.g., 
 		Trying to find the prime factors of 6546541851651256156 took too long :()
+
+Future refactoring passes:
+	- implement a more efficient is_prime algorithm 
+		(e.g., currently, linear with the size of the input int)
+	- implement a more efficient get_prime_factors
+		(e.g., currently, quadratic with the size of the input int)
+	- is there a more efficient way to persist/load previously computed prime factors?
 """
 
 import os
@@ -50,13 +59,6 @@ def persist_factors(input_int, factors, factors_file):
 		list of prime factors of input_int
 	factors_file - string
 		path to file storing serialized dictionary of {integers: [prime factors]}
-
-	Example Usage: FIXME - add test cases
-		try passing factors_file that doesn't exist - 
-			pass if factors_file is created and includes the test input_int
-		try loading empty factors_file - 
-			pass if input_int is added to factors_file
-
 	"""
 
 	try:
@@ -86,8 +88,8 @@ def previously_found_factors(input_int, factors_file):
 		an integer we want to determine if previously computed prime factors
 	factors_file - string
 		path to file storing serialized dictionary of {integers: [prime factors]}
-	
 	"""
+
 	try:
 		with open(factors_file, 'rb') as file:
 			factors_dict = pickle.load(file)
