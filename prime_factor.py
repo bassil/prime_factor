@@ -5,20 +5,25 @@ verifies that the input is an integer, and
 writes back a list of prime factors for the input
 
 Usage instructions:
-	- python ./prime_factor.py
-	- when prompted, imput an integer
+	- Execute the python file: 
+		$ python ./prime_factor.py
+	- when prompted, imput an integer:
+		$ Please enter an integer: <insert integer here>
 
 Uses doctest test suite -- Testing functionality of:
 	- get_prime_factors - are the returned factors prime
 	- is_prime - is the integer actually prime
-	- previously_found_factors - 
+	- previously_found_factors - FIXME
+	- persist_factors - FIXME
+
 
 FIXME - Continuous integeration on new commits -- e.g.,
 	python -m doctest -v prime_factor.py
 
-First pass refactoring philosophy --
+Refactoring philosophy for the first pass --
 	write the simplest version
-	Note: this version is really inefficient - 
+	Note: this version implements a naive prime factorization algorithm, and
+	 	is really inefficient - e.g., 
 		Trying to find the prime factors of 6546541851651256156 took too long :()
 """
 
@@ -28,7 +33,14 @@ import pickle
 from pathlib import Path
 
 def persist_factors(input_int, factors, factors_file):
-	"""if input_int not in factors_file, persist input factors to file ./found_factors.txt
+	"""if input_int not in factors_file, persist input factors to factors_file
+	
+	In this implementation, we're persisting by pickling, e.g., 
+		serializing a dict {input_int: [factors]} Python object
+		We're assuming that the O(1) lookup for a given input_int 
+		offsets the pickling/depickling overhead for a large enough factors_file
+		Some alternatives include adding a line to a csv w/ columns:
+		[input_int, factors], or a database table indexed on input_int for fast lookups
 
 	Args:
 
@@ -40,24 +52,34 @@ def persist_factors(input_int, factors, factors_file):
 		path to file storing serialized dictionary of {integers: [prime factors]}
 
 	Example Usage: FIXME - add test cases
+		try passing factors_file that doesn't exist - 
+			pass if factors_file is created and includes the test input_int
+		try loading empty factors_file - 
+			pass if input_int is added to factors_file
+
 	"""
 
-	if not os.path.exists(factors_file):
-		Path(factors_file).touch()
-	if os.path.getsize(factors_file) > 0:
+	try:
 		with open(factors_file, 'rb') as file:
 			factors_dict = pickle.load(file)
-	else:
-		factors_dict = {}
+	except:
+		if not os.path.exists(factors_file):
+			Path(factors_file).touch()
+			factors_dict = {}
 
+	# add the factors to the dict
 	factors_dict[input_int] = factors
 	
+	# serialize the dict factors_file
 	with open(factors_file, 'wb') as file:
 		pickle.dump(factors_dict, file, pickle.HIGHEST_PROTOCOL)
 
 def previously_found_factors(input_int, factors_file):
 	"""checks for input_int in factors_file, returns factors if found, otherwise false
 	
+	In this implementation, we're unpickling, e.g.,
+		de-serializing the byte stream into a dict {input_int: [factors]} Python object
+
 	Args:
 
 	input_int - int
@@ -65,7 +87,6 @@ def previously_found_factors(input_int, factors_file):
 	factors_file - string
 		path to file storing serialized dictionary of {integers: [prime factors]}
 	
-	Example Usage: FIXME - add test cases
 	"""
 	try:
 		with open(factors_file, 'rb') as file:
@@ -115,9 +136,9 @@ def get_prime_factors(input_int, factors_file):
 
 	Example Usage:
 
-	>>> get_prime_factors(27)
+	>>> get_prime_factors(27, "data/prime_factors.pkl")
 	[3]
-	>>> get_prime_factors(42)
+	>>> get_prime_factors(42, "data/prime_factors.pkl")
 	[2, 3, 7]
 	"""
 
@@ -150,4 +171,4 @@ if __name__ == '__main__':
 
 	# now that we have an integer, we need to find its prime factors
 	# suppose we had a function that, given an int, returns its prime factors.
-	print(get_prime_factors(user_input, "prime_factors.pkl"))
+	print(get_prime_factors(user_input, os.path.join("data", "prime_factors.pkl")))
